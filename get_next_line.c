@@ -6,18 +6,17 @@
 /*   By: iyamada <iyamada@student.42tokyo.jp>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/18 18:03:25 by iyamada           #+#    #+#             */
-/*   Updated: 2021/10/22 00:30:19 by iyamada          ###   ########.fr       */
+/*   Updated: 2021/10/23 00:32:03 by iyamada          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "get_next_line.h"
 
-// ssize_t read(int fd, void *container, size_t count);
-
-/*
-BUFFER_SIZE分のメモリを確保する
-BUFFER_SIZE分の文字数をreadでbufに読み込む
-*/
+void	ft_free_s(char **ptr)
+{
+	free(*ptr);
+	*ptr = NULL;
+}
 
 void	*ft_memcpy(void *dst, const void *src, size_t n)
 {
@@ -158,9 +157,9 @@ int	ft_forward_look_for_newline(const char *str)
 	return (-1);
 }
 
-int ft_strnllen(const char *str)
+size_t ft_strnllen(const char *str)
 {
-	int	i;
+	size_t	i;
 
 	i = 0;
 	while (str[i] != '\0' && str[i] != '\n')
@@ -170,7 +169,7 @@ int ft_strnllen(const char *str)
 	return (i);
 }
 
-void	ft_nlsubstr(const char *str, char **befor_newline, char **after_newline)
+void	ft_nlsubstr(char *str, char **befor_newline, char **after_newline)
 {
 	int	start;
 	int	len;
@@ -187,123 +186,120 @@ void	ft_nlsubstr(const char *str, char **befor_newline, char **after_newline)
 		*befor_newline = ft_substr(str, start, len);
 		*after_newline = ft_substr(str + start + len, ft_forward_look_for_newline(str + start + len), ft_strlen(str + start + len));
 	}
+	// ft_free_s(&str);
 }
 
-void	ft_free_s(char	**ptr)
+// \nを探すために使いたい
+char	*ft_strchr(const char *s, int c)
 {
-	free(*ptr);
-	*ptr = NULL;
+	size_t	i;
+
+	i = 0;
+	while (1)
+	{
+		if (s[i] == (char)c)
+			return ((char *)s + i);
+		if (s[i] == '\0')
+			return (NULL);
+		i++;
+	}
+}
+
+// \n以前と以降の文字列を分割したい
+void	ft_nlseparate(char *str, char **befor_newline, char **after_newline)
+{
+	size_t	len_before_nl;
+
+	len_before_nl = ft_strnllen(str);
+	*befor_newline = ft_substr(str, 0, len_before_nl);
+	*after_newline = ft_substr(str + len_before_nl, 1, ft_strlen(str) - (len_before_nl + 1));
+}
+
+ssize_t ft_read(int fd, char **container, char **buf)
+{
+	ssize_t		read_bytes;
+
+	*container = (char *)malloc(sizeof(char) * BUFFER_SIZE);
+	if (*container == NULL)
+		return (-1);
+	read_bytes = read(fd, *container, BUFFER_SIZE - 1);
+	if (read_bytes <= 0)
+	{
+		ft_free_s(buf);
+		ft_free_s(container);
+		return (-1);
+	}
+	(*container)[read_bytes] = '\0';
+	return (read_bytes);
+}
+
+char	*get_nextline_from_buf(char **buf)
+{
+	char	*next_line;
+	char	*tmp_buf;
+
+	tmp_buf = *buf;
+	ft_nlsubstr(*buf, &next_line, buf);
+	ft_free_s(&tmp_buf);
+	return (next_line);
+}
+
+char	*get_nextline_at_EOF(char **buf, char **container)
+{
+	char	*next_line;
+
+	next_line = ft_strjoin(*buf, *container);
+	ft_free_s(buf);
+	ft_free_s(container);
+	return (next_line);
+}
+
+char	*ft_strjoin_s(char *str1, char *str2)
+{
+	char	*joined_str;
+
+	joined_str = ft_strjoin(str1, str2);
+	ft_free_s(&str1);
+	ft_free_s(&str2);
+	return (joined_str);
+}
+
+char *get_nextline_from_container(char **container, char **buf)
+{
+	char *before_newline;
+	char *after_newline;
+	char *next_line;
+
+	ft_nlsubstr(*container, &before_newline, &after_newline);
+	ft_free_s(container);
+	next_line = ft_strjoin_s(*buf, before_newline);
+	*buf = after_newline;
+	return (next_line);
 }
 
 char	*get_next_line(int fd)
 {
 	char		*container;
-	char		*buf_ptr_for_free;
-	char		*new_line_ptr;
-	char		*new_line_in_str;
-	char		*line; // 出力する文字列のポインタを格納
-	char		*before_newline;
-	char		*after_newline;
-	static char	*buf; // 初期値はNULL
+	static char	*buf;
+	char		*tmp_buf;
 	ssize_t		read_bytes;
-	int i = 0;
 
+	if (fd < 0 && _SC_OPEN_MAX < fd)
+		return (NULL);
 	if (buf == NULL)
 		buf = ft_strdup("");
+	if (ft_strchr(buf, '\n'))
+		return (get_nextline_from_buf(&buf));
 	while (1)
 	{
-		container = (char *)malloc(sizeof(char) * BUFFER_SIZE);
-		if (container == NULL)
+		read_bytes = ft_read(fd, &container, &buf);
+		if (read_bytes < 0)
 			return (NULL);
-		read_bytes = read(fd, container, BUFFER_SIZE - 1);
-		if (read_bytes == -1 || read_bytes == 0 && ft_strlen(buf) == 0)
-		{
-			ft_free_s(&container);
-			ft_free_s(&buf);
-			return (NULL);
-		}
-		container[read_bytes] = '\0';
-		buf_ptr_for_free = buf;
-		buf = ft_strjoin(buf, container);
-		ft_free_s(&buf_ptr_for_free);
-		buf_ptr_for_free = buf;
-		ft_nlsubstr(buf, &before_newline, &after_newline);
-		ft_free_s(&buf_ptr_for_free);
-		if (read_bytes < BUFFER_SIZE - 1 && ft_strlen(before_newline) == 0)
-		{
-			line = ft_strdup(after_newline);
-			buf = ft_strdup(before_newline);
-		}
-		else
-		{
-			line = ft_strdup(before_newline);
-			buf = ft_strdup(after_newline);
-		}
-		ft_free_s(&buf_ptr_for_free);
-		ft_free_s(&container);
-		ft_free_s(&after_newline);
-		ft_free_s(&before_newline);
-		if (ft_strlen(line) != 0)
-			return (line);
-		i++;
+		if (ft_strchr(container, '\n') != NULL)
+			break ;
+		if (read_bytes < BUFFER_SIZE - 1)
+			return (get_nextline_at_EOF(&buf, &container));
+		buf = ft_strjoin_s(buf, container);
 	}
-	return (NULL);
+	return (get_nextline_from_container(&container, &buf));
 }
-
-// int	ft_forward_look_for_newline(const char *str)
-// {
-// 	int	i;
-// 	int	count;
-
-// 	count = 0;
-// 	i = 0;
-// 	while (str[i] != '\0')
-// 	{
-// 		if (str[i] != '\n')
-// 			return (i);
-// 		i++;
-// 	}
-// 	return (-1);
-// }
-
-// int ft_strnllen(const char *str)
-// {
-// 	int	count;
-// 	int	i;
-
-// 	count = 0;
-// 	i = 0;
-// 	while (str[i] != '\0')
-// 	{
-// 		if (str[i] == '\n')
-// 			return (count);
-// 		count++;
-// 		i++;
-// 	}
-// 	return (-1);
-// }
-
-// void	ft_nlsubstr(const char *str, char **befor_newline, char **after_newline)
-// {
-// 	int	start;
-// 	int	len;
-
-// 	start = ft_forward_look_for_newline(str);
-// 	len = ft_strnllen(str + start);
-// 	if (len == -1)
-// 		len = ft_strlen(str + start);
-// 	*befor_newline = ft_substr(str, start, len);
-// 	*after_newline = ft_substr(str + start + len, ft_forward_look_for_newline(str + start + len), ft_strlen(str + start + len));
-// }
-
-// int main(void) {
-// 	char *str = ft_strdup("\n\nabc\nng\nfefebf");
-// 	char *before_newline;
-// 	char *after_newline;
-
-// 	ft_nlsubstr(str, &before_newline, &after_newline);
-// 	printf("before_newline : %s\n", before_newline);
-// 	printf("after_newline : %s\n", after_newline);
-// 	free(before_newline);
-// 	free(after_newline);
-// }
