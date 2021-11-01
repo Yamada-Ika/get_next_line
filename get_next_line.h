@@ -6,7 +6,7 @@
 /*   By: iyamada <iyamada@student.42tokyo.jp>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/18 18:05:00 by iyamada           #+#    #+#             */
-/*   Updated: 2021/10/23 18:08:15 by iyamada          ###   ########.fr       */
+/*   Updated: 2021/11/01 16:41:32 by iyamada          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,13 +15,14 @@
 
 #include <unistd.h>
 #include <stdlib.h>
-#include <stdio.h>
-
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <malloc/malloc.h>
 #include <string.h>
 
+#define FD_MAX 256
+
 char	*get_next_line(int fd);
+void	ft_free_s(void **ptr);
+size_t	ft_strclen(const char *s, int c);
+size_t	ft_strlcpy(char *dst, const char *src, size_t dstsize);
+char	*ft_strchr(const char *s, int c);
 
 #endif
