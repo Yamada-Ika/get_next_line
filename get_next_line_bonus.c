@@ -6,7 +6,7 @@
 /*   By: iyamada <iyamada@student.42tokyo.jp>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/18 18:03:25 by iyamada           #+#    #+#             */
-/*   Updated: 2021/11/02 00:42:34 by iyamada          ###   ########.fr       */
+/*   Updated: 2021/11/02 00:48:55 by iyamada          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,7 +100,7 @@ char	*get_next_line(int fd)
 		if (ft_strchr(save[fd], '\n'))
 			return (ft_nlseparate(save[fd], &save[fd]));
 		read_bytes = ft_read(fd, &buf);
-		if (read_bytes < 0 || (read_bytes == 0 && ft_strclen(save[fd], '\0') == 0))
+		if (read_bytes < 0 || (!read_bytes && !ft_strclen(save[fd], '\0')))
 		{
 			ft_free_s((void **)&buf);
 			ft_free_s((void **)&save[fd]);
