@@ -6,7 +6,7 @@
 /*   By: iyamada <iyamada@student.42tokyo.jp>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/18 18:03:25 by iyamada           #+#    #+#             */
-/*   Updated: 2021/11/02 00:33:27 by iyamada          ###   ########.fr       */
+/*   Updated: 2021/11/03 11:21:23 by iyamada          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -74,7 +74,7 @@ static ssize_t	ft_read(int fd, char **buf)
 {
 	ssize_t	read_bytes;
 
-	*buf = (char *)malloc(sizeof(char) * BUFFER_SIZE + 1);
+	*buf = (char *)malloc(sizeof(char) * ((size_t)BUFFER_SIZE + 1));
 	if (*buf == NULL)
 		return (-1);
 	read_bytes = read(fd, *buf, BUFFER_SIZE);
