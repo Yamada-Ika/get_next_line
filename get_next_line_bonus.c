@@ -6,7 +6,7 @@
 /*   By: iyamada <iyamada@student.42tokyo.jp>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2021/10/18 18:03:25 by iyamada           #+#    #+#             */
-/*   Updated: 2021/11/03 11:21:44 by iyamada          ###   ########.fr       */
+/*   Updated: 2021/11/04 15:30:07 by iyamada          ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,7 +87,7 @@ static ssize_t	ft_read(int fd, char **buf)
 char	*get_next_line(int fd)
 {
 	char		*buf;
-	static char	*save[FD_MAX] = {NULL};
+	static char	*save[FD_MAX + 1] = {NULL};
 	ssize_t		read_bytes;
 
 	if (fd < 0 || fd == STDOUT_FILENO || fd == STDERR_FILENO
